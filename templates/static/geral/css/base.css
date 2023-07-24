@@ -1,0 +1,24 @@
+.card-area{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px,1fr));
+    gap: 30px;
+}
+.card{
+    max-height: 300px;
+    overflow: hidden;
+
+}
+.card-body{
+    display: flex;
+    flex-direction: column;
+}
+.card-body .links{
+    margin-top: auto;
+}
+.card h5{
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
