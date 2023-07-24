@@ -1,0 +1,36 @@
+{% extends 'bases/base.html' %}
+
+{% block 'body' %}
+    <section class="py-5 ">
+        <h1>{{ page_title }} - {{ job.get_level_display }}</h1>
+        <div>
+            {% for skill in job.skills.all %}
+                <span class="badge text-bg-primary">{{ skill.title }}</span>
+             {% endfor %}
+        </div>
+        <h2 class="mt-3"> Descrição </h2>
+        <p>{{job.description|linebreaksbr}}</p>
+
+        <h2 class="mt-3"> Requisitos </h2>
+        <ul>
+            {% for requirement in job.requirements_list %}
+                <li>{{requirement}}</li>
+
+            {% endfor %}
+        </ul>
+
+        <h2 class="mt-3"> Responsabilidades </h2>
+        <ul>
+            {% for responsibilite in job.responsibilities_list %}
+                <li>{{responsibilite}}</li>
+            {% endfor %}
+        </ul>
+
+        <form action="{% url 'interviews:create' job_pk=job.pk %}" method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success"> Realizar teste de aptidão </button>
+        </form>
+    </section>
+   
+
+{% endblock %}  
