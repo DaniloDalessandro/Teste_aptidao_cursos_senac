@@ -18,3 +18,7 @@ class JobAdmin(admin.ModelAdmin):
 class SkillAdmin(admin.ModelAdmin):
     list_display = ("title",)
     search_fields = ("title",)
+
+admin.site.site_title='Ações do SkilAi'
+admin.site.site_header='Login SkilAi'
+admin.site.index_title='Administração do SkilAi'

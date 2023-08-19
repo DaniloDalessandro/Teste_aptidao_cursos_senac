@@ -19,7 +19,7 @@ def details(request, uuid):
         request,
         "interviews/details.html",
         {
-            "page_title": f"Entrevista: {chat.job.title}",
+            "page_title": f"Entrevista para: {chat.job.title}",
             "chat":chat,
         }
     )

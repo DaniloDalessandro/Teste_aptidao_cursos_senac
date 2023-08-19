@@ -32,7 +32,7 @@ class Message(models.Model):
     ROLE_CHOICES = (
         ("system", "Sistema"),
         ("user", "Candidato"),
-        ("assistant", "Entevistador")
+        ("assistant", "Ada")
     )
 
     chat = models.ForeignKey("interviews.Chat", on_delete=models.CASCADE, related_name="messages")
