@@ -11,3 +11,5 @@ class MessageInline(admin.TabularInline):
 class ChatAdmin(admin.ModelAdmin):
     list_display = ("title", "job", "completed")
     inlines = (MessageInline,)
+
+
