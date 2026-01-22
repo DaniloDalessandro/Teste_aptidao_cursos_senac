@@ -153,6 +153,13 @@ AI_SERVICE = {
     'PROMPT_VERSION': config("AI_PROMPT_VERSION", default="v1"),
 }
 
+# Interview Configuration
+INTERVIEW_MAX_QUESTIONS = config("INTERVIEW_MAX_QUESTIONS", default=5, cast=int)
+INTERVIEW_FEEDBACK_PROMPT = config(
+    "INTERVIEW_FEEDBACK_PROMPT",
+    default="Realize o feedback do candidato ao curso, esse feedback deve indicar quais os pontos positivos, os pontos negativos e o que deve ser melhorado, e de acordo com as respostas mensurar um porcentagem de aderência a vaga que vai de 0 a 100, e caso o candidato não tenha conhecimento em informatica basica, indicar o curo de introdução a informatica do senac."
+)
+
 # Django REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
