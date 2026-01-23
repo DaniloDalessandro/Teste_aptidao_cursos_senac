@@ -2,6 +2,7 @@ import logging
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
 from rest_framework import status
+from rest_framework.exceptions import Throttled
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError, AuthenticationFailed
 
 logger = logging.getLogger(__name__)
@@ -91,6 +92,25 @@ def custom_exception_handler(exc, context):
                 "detail": str(exc.detail) if hasattr(exc, 'detail') else str(exc)
             }]
         }, status=status.HTTP_401_UNAUTHORIZED)
+
+    # Tratamento para rate limiting (throttling)
+    if isinstance(exc, Throttled):
+        wait_seconds = exc.wait
+        if wait_seconds is not None:
+            wait_minutes = int(wait_seconds / 60) + 1
+            message = f"Muitas requisições. Tente novamente em {wait_minutes} minuto(s)."
+        else:
+            message = "Muitas requisições. Tente novamente mais tarde."
+
+        return Response({
+            "success": False,
+            "message": message,
+            "data": None,
+            "errors": [{
+                "code": "rate_limit_exceeded",
+                "detail": f"Limite de requisições excedido. Aguarde {int(wait_seconds or 60)} segundos."
+            }]
+        }, status=status.HTTP_429_TOO_MANY_REQUESTS)
 
     # Handler padrão do DRF
     response = exception_handler(exc, context)

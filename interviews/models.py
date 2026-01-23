@@ -2,6 +2,7 @@ import uuid
 
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 
 
 class Chat(models.Model):
@@ -9,6 +10,34 @@ class Chat(models.Model):
     title = models.CharField(max_length=100, editable=False, verbose_name='Título')
     job = models.ForeignKey("jobs.Job", on_delete=models.CASCADE, related_name="chats")
     completed = models.BooleanField(default=False)
+
+    # Campos de auditoria
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Criado em')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Atualizado em')
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='chats_created',
+        verbose_name='Criado por'
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='chats_updated',
+        verbose_name='Atualizado por'
+    )
+
+    class Meta:
+        verbose_name = 'Entrevista'
+        verbose_name_plural = 'Entrevistas'
+        indexes = [
+            models.Index(fields=['created_at']),
+            models.Index(fields=['job', 'completed']),
+        ]
 
     def __str__(self):
         return self.title

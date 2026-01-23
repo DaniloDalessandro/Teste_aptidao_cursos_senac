@@ -1,3 +1,7 @@
+"""
+Serviço de Chat para entrevistas.
+Usa LangChain por padrão, com fallback para implementação legacy.
+"""
 import logging
 import time
 import requests
@@ -15,6 +19,27 @@ from .exceptions import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def get_chat_service():
+    """
+    Factory para obter o serviço de chat apropriado.
+    Usa LangChain por padrão, fallback para legacy se não configurado.
+    """
+    provider = settings.AI_SERVICE.get('PROVIDER', 'gemini')
+
+    # Usa LangChain para providers modernos
+    if provider in ('gemini', 'openai'):
+        try:
+            from .services_langchain import ChatServiceLangChain
+            logger.info(f"Usando ChatServiceLangChain com provider: {provider}")
+            return ChatServiceLangChain()
+        except ImportError as e:
+            logger.warning(f"LangChain não disponível, usando legacy: {e}")
+
+    # Fallback para implementação legacy
+    logger.info("Usando ChatService legacy")
+    return ChatService()
 
 
 class GptService:

@@ -13,7 +13,24 @@ class MessageSerializer(serializers.ModelSerializer):
 
 
 class MessageCreateSerializer(serializers.Serializer):
-    content = serializers.CharField(required=True, allow_blank=False)
+    content = serializers.CharField(
+        required=True,
+        allow_blank=False,
+        min_length=2,
+        max_length=2000,
+        error_messages={
+            'blank': 'A mensagem não pode estar vazia.',
+            'min_length': 'A mensagem deve ter pelo menos 2 caracteres.',
+            'max_length': 'A mensagem não pode exceder 2000 caracteres.',
+        }
+    )
+
+    def validate_content(self, value):
+        """Valida e sanitiza o conteúdo da mensagem."""
+        content = value.strip()
+        if not content:
+            raise serializers.ValidationError("A mensagem não pode estar vazia.")
+        return content
 
 
 class ChatSerializer(serializers.ModelSerializer):
@@ -31,10 +48,15 @@ class ChatListSerializer(serializers.ModelSerializer):
     """Serializer leve para listagem de chats (admin)."""
     job_title = serializers.CharField(source='job.title', read_only=True)
     messages_count = serializers.SerializerMethodField()
+    created_by_username = serializers.CharField(source='created_by.username', read_only=True, default=None)
+    updated_by_username = serializers.CharField(source='updated_by.username', read_only=True, default=None)
 
     class Meta:
         model = Chat
-        fields = ['uuid', 'title', 'job_title', 'completed', 'messages_count']
+        fields = [
+            'uuid', 'title', 'job_title', 'completed', 'messages_count',
+            'created_at', 'updated_at', 'created_by_username', 'updated_by_username'
+        ]
 
     def get_messages_count(self, obj):
         return obj.messages.count()

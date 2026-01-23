@@ -139,17 +139,30 @@ MEDIA_URL = '/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-GPT_MODEL = config("GPT_MODEL")
-OPEN_AI_API_KEY = config("OPEN_AI_API_KEY")
-OPEN_AI_BASE_URL = config("OPEN_AI_BASE_URL")
-INITIAL_PROMPT_TEMPLATE = config("INITIAL_PROMPT_TEMPLATE").replace(r"\n", "\n")
+# LLM Provider Configuration
+# Supported providers: 'gemini', 'openai'
+LLM_PROVIDER = config("LLM_PROVIDER", default="gemini")
+
+# Gemini Configuration
+GEMINI_API_KEY = config("GEMINI_API_KEY", default="")
+GEMINI_MODEL = config("GEMINI_MODEL", default="gemini-1.5-flash")
+
+# OpenAI Configuration (legacy - mantido para compatibilidade)
+GPT_MODEL = config("GPT_MODEL", default="gpt-3.5-turbo")
+OPEN_AI_API_KEY = config("OPEN_AI_API_KEY", default="")
+OPEN_AI_BASE_URL = config("OPEN_AI_BASE_URL", default="https://api.openai.com/v1")
+
+# Prompt Template
+INITIAL_PROMPT_TEMPLATE = config("INITIAL_PROMPT_TEMPLATE", default="").replace(r"\n", "\n")
 
 # AI Service Configuration
 AI_SERVICE = {
+    'PROVIDER': LLM_PROVIDER,
     'TIMEOUT': config("AI_TIMEOUT", default=30, cast=int),
     'MAX_RETRIES': config("AI_MAX_RETRIES", default=3, cast=int),
     'MAX_RESPONSE_TOKENS': config("AI_MAX_RESPONSE_TOKENS", default=1000, cast=int),
     'CONTEXT_MAX_TOKENS': config("AI_CONTEXT_MAX_TOKENS", default=4000, cast=int),
+    'TEMPERATURE': config("AI_TEMPERATURE", default=0.7, cast=float),
     'PROMPT_VERSION': config("AI_PROMPT_VERSION", default="v1"),
 }
 
@@ -168,6 +181,15 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'interview_create': '10/hour',
+        'interview_message': '60/hour',
+        'interview_detail': '120/hour',
+    },
     'EXCEPTION_HANDLER': 'core.utils.api_responses.custom_exception_handler',
 }
 
