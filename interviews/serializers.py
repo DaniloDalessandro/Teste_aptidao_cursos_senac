@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Chat, Message
+from .models import Chat, Message, InterviewResult
 from jobs.serializers import JobListSerializer
 
 
@@ -70,3 +70,34 @@ class InterviewCreateSerializer(serializers.Serializer):
         if not Job.objects.filter(id=value).exists():
             raise serializers.ValidationError("Curso não encontrado")
         return value
+
+
+class InterviewResultSerializer(serializers.ModelSerializer):
+    """Serializer para o resultado da entrevista."""
+    chat_uuid = serializers.UUIDField(source='chat.uuid', read_only=True)
+    chat_title = serializers.CharField(source='chat.title', read_only=True)
+
+    class Meta:
+        model = InterviewResult
+        fields = [
+            'id',
+            'chat_uuid',
+            'chat_title',
+            'profile_summary',
+            'course_recommendations',
+            'recommendation_justification',
+            'finished_at',
+            'created_at'
+        ]
+        read_only_fields = ['id', 'chat_uuid', 'chat_title', 'created_at']
+
+
+class InterviewFinishSerializer(serializers.Serializer):
+    """Serializer para input de finalização de entrevista."""
+    profile_summary = serializers.CharField(required=True, allow_blank=False)
+    course_recommendations = serializers.ListField(
+        child=serializers.DictField(),
+        required=True,
+        allow_empty=False
+    )
+    recommendation_justification = serializers.CharField(required=True, allow_blank=False)

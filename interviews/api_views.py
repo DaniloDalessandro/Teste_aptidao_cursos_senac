@@ -11,7 +11,7 @@ from core.throttles import (
     InterviewMessageByUUIDThrottle,
 )
 from jobs.models import Job
-from .models import Chat, Message
+from .models import Chat, Message, InterviewResult
 from .services import get_chat_service
 from .exceptions import (
     AITimeoutError,
@@ -27,6 +27,8 @@ from .serializers import (
     MessageSerializer,
     MessageCreateSerializer,
     InterviewCreateSerializer,
+    InterviewResultSerializer,
+    InterviewFinishSerializer,
 )
 
 
@@ -170,6 +172,61 @@ class InterviewMessageCreateAPIView(APIView):
                 errors=[{"code": "ai_response_error", "detail": "Resposta inválida da IA"}],
                 status_code=status.HTTP_502_BAD_GATEWAY
             )
+
+
+class InterviewFinishAPIView(APIView):
+    """
+    POST /api/v1/interviews/{uuid}/finish/
+    Finaliza uma entrevista e gera o resultado.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request, uuid):
+        try:
+            chat = Chat.objects.get(uuid=uuid)
+        except Chat.DoesNotExist:
+            return error_response(
+                message="Entrevista não encontrada",
+                status_code=status.HTTP_404_NOT_FOUND
+            )
+
+        # Verifica se já existe um resultado para esta entrevista
+        if hasattr(chat, 'result'):
+            return error_response(
+                message="Esta entrevista já foi finalizada",
+                errors=[{
+                    "code": "interview_already_finished",
+                    "detail": "Já existe um resultado para esta entrevista"
+                }],
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = InterviewFinishSerializer(data=request.data)
+        if not serializer.is_valid():
+            return error_response(
+                message="Dados inválidos",
+                errors=serializer.errors,
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Cria o resultado da entrevista
+        result = InterviewResult.objects.create(
+            chat=chat,
+            profile_summary=serializer.validated_data['profile_summary'],
+            course_recommendations=serializer.validated_data['course_recommendations'],
+            recommendation_justification=serializer.validated_data['recommendation_justification']
+        )
+
+        # Marca o chat como completado
+        chat.completed = True
+        chat.save()
+
+        result_serializer = InterviewResultSerializer(result)
+        return success_response(
+            message="Entrevista finalizada com sucesso",
+            data=result_serializer.data,
+            status_code=status.HTTP_201_CREATED
+        )
 
 
 class AdminInterviewListAPIView(generics.ListAPIView):

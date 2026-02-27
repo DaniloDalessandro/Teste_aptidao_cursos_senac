@@ -74,3 +74,61 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.role} - {self.chat.title}"
+
+    def save(self, *args, **kwargs):
+        if not self.pk and self.role != "assistant" and not self.chat.completed:
+            super().save(*args, **kwargs)
+
+            if self.role == "user" and self.chat.messages.filter(role="assistant").count() == 5:
+                Message.objects.create(
+                    chat=self.chat,
+                    role="system",
+                    content="Realize o feedback do candidato ao curso, esse feedback deve indicar quais os pontos positivos, os pontos negativos e o que deve ser melhorado, e de acordo com as respostas mensurar um porcentagem de aderência a vaga que vai de 0 a 100, e caso o candidato não tenha conhecimento em informatica basica, indicar o curo de introdução a informatica do senac. "
+                )
+                self.chat.completed = True
+                self.chat.save()
+            else:
+                from .services import GptService
+                service = GptService()
+                Message.objects.create(
+                    chat=self.chat,
+                    role="assistant",
+                    content=service.get_chat_completion(self.chat.messages.all())
+                )
+        else:
+            super().save(*args, **kwargs)
+
+
+class InterviewResult(models.Model):
+    """Modelo para armazenar o resultado final de uma entrevista."""
+
+    chat = models.OneToOneField(
+        "interviews.Chat",
+        on_delete=models.CASCADE,
+        related_name="result",
+        verbose_name="Entrevista"
+    )
+    profile_summary = models.TextField(
+        verbose_name="Resumo do Perfil",
+        help_text="Resumo do perfil do aluno baseado nas respostas da entrevista"
+    )
+    course_recommendations = models.JSONField(
+        verbose_name="Recomendações de Cursos",
+        help_text="Lista de cursos recomendados com base no perfil"
+    )
+    recommendation_justification = models.TextField(
+        verbose_name="Justificativa",
+        help_text="Justificativa para as recomendações de cursos"
+    )
+    finished_at = models.DateTimeField(
+        verbose_name="Finalizado em",
+        default=timezone.now
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Resultado da Entrevista"
+        verbose_name_plural = "Resultados das Entrevistas"
+
+    def __str__(self):
+        return f"Resultado - {self.chat.title}"
